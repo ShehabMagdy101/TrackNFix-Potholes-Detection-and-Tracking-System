@@ -1,0 +1,216 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #f5f5f5; /* smoke white */
+  color: #333;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  height: 100px;
+  width: 250px;
+}
+
+.comp-logo {
+  height: 100px;
+  width: auto;
+}
+
+/* Controls Section */
+.controls-section {
+  background: white;
+  padding: 15px 20px;
+  margin: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filter-card {
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 120px;
+}
+
+.filter-card label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.filter-card select,
+.filter-card input {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.clear-btn {
+  background: #ea7f30;
+  border: none;
+  padding: 8px 14px;
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.clear-btn:hover {
+  background: #d96e24;
+}
+
+.confidence-value {
+  margin-top: 4px;
+  font-weight: bold;
+  color: #ea7f30;
+}
+
+/* Stats Tickets */
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats-ticket {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.ticket-total {
+  background: #6c757d;
+}
+.ticket-pending {
+  background: #ff9800;
+}
+.ticket-fixed {
+  background: #28a745;
+}
+.ticket-reviewed {
+  background: #007bff;
+}
+
+/* Main Layout */
+.main-container {
+  display: flex;
+  flex: 1;
+  padding: 15px;
+  gap: 15px;
+}
+
+.map-container {
+  flex: 3;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  margin-left: 10px; /* margin left */
+}
+
+.sidebar {
+  flex: 1.2;
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #ea7f30;
+}
+
+.image-preview {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.selected-details .info p {
+  margin: 6px 0;
+}
+
+.selected-details-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.fixed-btn {
+  background: #28a745;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.fixed-btn:hover {
+  background: #218838;
+}
+
+.review-btn {
+  background: #007bff;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.review-btn:hover {
+  background: #0069d9;
+}
+
+.status-dropdown {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 15px 0;
+  background-color: #252c2c;
+  color: #ea7f30;
+  margin-top: auto;
+}

@@ -1,31 +1,33 @@
 #include <Arduino.h>
-#include <TinyGPS++.h>
-#include <HardwareSerial.h>
-#include <WiFi.h>
 #include <PubSubClient.h>
+#include <TinyGPS++.h>
+#include "esp_camera.h"
 #include <WiFiClientSecure.h>
 #include <base64.h>
-#include <SPIFFS.h>
-#include "esp_camera.h"   // Added for ESP32-CAM
+#include <WiFi.h>
 
-// ---- PIN DEFINITIONS FOR ESP32-CAM (AI Thinker) ----
-#define PWDN_GPIO_NUM     -1
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
-
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
+#define CAMERA_MODEL_AI_THINKER
+#if defined(CAMERA_MODEL_AI_THINKER)
+  #define PWDN_GPIO_NUM     32
+  #define RESET_GPIO_NUM    -1
+  #define XCLK_GPIO_NUM      0
+  #define SIOD_GPIO_NUM     26
+  #define SIOC_GPIO_NUM     27
+  
+  #define Y9_GPIO_NUM       35
+  #define Y8_GPIO_NUM       34
+  #define Y7_GPIO_NUM       39
+  #define Y6_GPIO_NUM       36
+  #define Y5_GPIO_NUM       21
+  #define Y4_GPIO_NUM       19
+  #define Y3_GPIO_NUM       18
+  #define Y2_GPIO_NUM        5
+  #define VSYNC_GPIO_NUM    25
+  #define HREF_GPIO_NUM     23
+  #define PCLK_GPIO_NUM     22
+#else
+  #error "Camera model not selected"
+#endif
 
 // ---- GPS ----
 #define RXD2 16
@@ -39,8 +41,15 @@ const int vechile_id = 1;
 int id = 1;
 
 // Wi-Fi credentials
-const char* ssid = "ADHAM";
-const char* password = "121269@ma#";
+const char* ssid = "Shehab’s iPhone";
+const char* password = "123456789";
+
+// MQTT topic
+const char* topic_publish = "esp32/tracknfix";
+
+// Variables for timing
+long previous_time = 0;
+const long capture_interval = 2000;  // Capture every 2 seconds
 
 // MQTT broker details private
 const char* mqtt_broker = "0785cb996e8440269dfc410343b0d3ef.s1.eu.hivemq.cloud";
@@ -48,19 +57,13 @@ const int mqtt_port = 8883;
 const char* mqtt_username = "shehab101";
 const char* mqtt_password = "@inV6GzVjGtES2x";
 
-// MQTT topic
-const char* topic_publish = "esp32/tracknfix";
-
 WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
-
-// Variables for timing
-long previous_time = 0;
-const long capture_interval = 2000;  // Capture every 2 seconds
 
 void setupMQTT() {
   mqttClient.setServer(mqtt_broker, mqtt_port);
 }
+
 
 void reconnect() {
   Serial.println("Connecting to MQTT Broker...");
@@ -80,19 +83,18 @@ void reconnect() {
   }
 }
 
-// Capture and overwrite image
-String captureAndEncodeImage() {
+String captureAndEncodeImage(){
   camera_fb_t * fb = esp_camera_fb_get();
-  if (!fb) {
-    Serial.println("Camera capture failed");
+  if(!fb){
+    Serial.println("Camer capture failed");
     return "";
   }
 
-  // Encode directly from framebuffer to base64 (no SPIFFS used, overwriting in RAM)
+  //Encode image
   String encoded = base64::encode(fb->buf, fb->len);
 
-  esp_camera_fb_return(fb);  // free buffer
-  Serial.println("Captured & encoded image, size: " + String(encoded.length()));
+  esp_camera_fb_return(fb);
+  Serial.println("Captured & encoded image, size:" + String(encoded.length()));
   return encoded;
 }
 
@@ -122,12 +124,12 @@ void handleGPS(double &lat, double &lng, String &timestamp) {
   }
 }
 
-void setup() {
+void setup(){
   Serial.begin(115200);
   delay(1000);
   gpsSerial.begin(GPS_BAUD, SERIAL_8N1, RXD2, TXD2);
 
-  // Initialize Camera
+    // Initialize Camera
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer   = LEDC_TIMER_0;
@@ -143,16 +145,16 @@ void setup() {
   config.pin_pclk     = PCLK_GPIO_NUM;
   config.pin_vsync    = VSYNC_GPIO_NUM;
   config.pin_href     = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn     = PWDN_GPIO_NUM;
   config.pin_reset    = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
 
   if(psramFound()){
-    config.frame_size = FRAMESIZE_QVGA;  //  Lower resolution to save space
-    config.jpeg_quality = 12;            //  Quality adjusted
+    config.frame_size = FRAMESIZE_QVGA;
+    config.jpeg_quality = 12;
     config.fb_count = 1;
   } else {
     config.frame_size = FRAMESIZE_QQVGA;
@@ -160,12 +162,11 @@ void setup() {
     config.fb_count = 1;
   }
 
-  if(esp_camera_init(&config) != ESP_OK) {
-    Serial.println("Camera init failed!");
+  if(esp_camera_init(&config) != ESP_OK){
+    Serial.println("Camera init failed");
     return;
   }
-
-  // connecting to wifi
+// connecting to wifi
   Serial.println("\nConnecting to WiFi...");
   WiFi.begin(ssid, password);
 
@@ -184,13 +185,15 @@ void setup() {
   setupMQTT();
 }
 
-void loop() {
+
+
+void loop(){
   while (gpsSerial.available() > 0) {
     char c = gpsSerial.read();
     gps.encode(c);
   }
 
-  if (!mqttClient.connected()) {
+if (!mqttClient.connected()) {
     reconnect();
   }
   mqttClient.loop();
