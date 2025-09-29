@@ -1,6 +1,11 @@
 <img width="1920" height="1080" alt="Thumbnail" src="https://github.com/user-attachments/assets/1bffda6f-3cd2-4a73-8806-2996c9f9d38b" />
 
 
+---
+
+- Project Demo Video [here](https://youtu.be/YyVkExRSrEc) ▶️
+
+
 # 📑 Table of Contents
 - [Overview](#overview)  
 - [Features](#features)  
@@ -118,4 +123,5 @@ The system consists of:
 ---
 
 📌 *This project was developed as part of our academic journey at the Digitopia competition 2025.*  
+
 
