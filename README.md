@@ -122,6 +122,7 @@ The system consists of:
 
 ---
 
-📌 *This project was developed as part of our academic journey at the Digitopia competition 2025.*  
+📌 *This project was developed as part of our journey at the Digitopia competition 2025.*  
+
 
 
