@@ -57,24 +57,26 @@ The system consists of:
 
 <img width="1290" height="471" alt="class diagram" src="https://github.com/user-attachments/assets/d8d3c045-4e3f-45ec-9ccf-9100841df55d" />
 
+# Dataset
+
 <img width="846" height="265" alt="image" src="https://github.com/user-attachments/assets/e9fb106d-07d1-403a-bd3a-9cee530c3725" />
 
 ---
 
 # 🛠️ Tech Stack  
 
-**Hardware:** ESP32-CAM, NEO-6M GPS, vibration sensors  
-**Embedded Development:** Arduino IDE, PlatformIO  
-**Backend:** Python Flask, Node-RED, HiveMQ (MQTT)  
-**Frontend:** ReactJS, Google Sheets API  
-**Machine Learning:** YOLO (trained on Colab)  
-**Data & Visualization:** Google Sheets, Grafana  
+- **Hardware:** ESP32-CAM, NEO-6M GPS
+- **Embedded Development:** Arduino IDE
+- **Backend:** Python Flask, Node-RED, HiveMQ (MQTT)  
+- **Frontend:** ReactJS, Google Sheets API  
+- **Machine Learning:** YOLO (trained on Colab)  
+
+<img width="902" height="514" alt="image" src="https://github.com/user-attachments/assets/a9ce9e5d-4194-4049-b4f5-fab8f5cdd6f7" />
+
 
 ---
 
 # ⚙️ Hardware & Embedded System  
-
-<img width="433" height="577" alt="image-removebg-preview (1)" src="https://github.com/user-attachments/assets/ba8d83c9-5bed-45ed-b2a8-143d48fa3a0c" />
 
 
 - **ESP32-CAM** captures road images when a disturbance is detected.  
@@ -88,7 +90,6 @@ The system consists of:
 
 # 💻 Web App Dashboard  
 
-<img width="666" height="428" alt="image" src="https://github.com/user-attachments/assets/8e4d0437-9016-4e06-b2d1-a49d17e194b1" />
 
 <img width="874" height="444" alt="image" src="https://github.com/user-attachments/assets/7b07956b-7bdb-447a-bb9a-e4dfdb6d9033" />
 
@@ -104,14 +105,17 @@ The system consists of:
 
 # 👨‍💻 Team Members & Roles  
 
-| Name        | Role                                   |  
-|-------------|----------------------------------------|  
-| Shehab Magdy | Team Lead, Embedded System Coding, UML, Presentation |  
-| Abdelrahman Mohammed | Machine Learning – Model Training & Evaluation |  
-| Abdelrahman Saied  | Backend Development – Flask & Server Integration |  
-| Seif Khaled  | Frontend Development – ReactJS & UI/UX |  
+
+| Name                                                                 | Role                                                |  
+|----------------------------------------------------------------------|----------------------------------------------------|  
+| [Shehab Magdy](https://www.linkedin.com/in/shehab-magdy-se2122003x/) | Team Lead, Embedded System Coding, UML, Presentation |  
+| [Abdelrahman Mohammed](https://www.linkedin.com/in/abdulrahman-mohammed2003/) | Machine Learning – Model Training & Evaluation      |  
+| [Abdelrahman Saied](https://www.linkedin.com/in/abdelrahman-saied-010b85194/) | Backend Development – Flask & Server Integration    |  
+| [Seif Khaled](https://www.linkedin.com/in/seif-khaled-83bb99252/)    | Frontend Development – ReactJS & UI/UX              |  
+
 
 
 ---
 
-📌 *This project was developed as part of our academic journey at the Digitopia Compition 2025.*  
+📌 *This project was developed as part of our academic journey at the Digitopia competition 2025.*  
+
