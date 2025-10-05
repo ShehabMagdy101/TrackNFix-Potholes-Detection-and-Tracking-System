@@ -6,6 +6,9 @@
 #include <HardwareSerial.h>
 #include <WiFiClientSecure.h>
 
+// =============================
+// indicator: Buzzer
+#define BUZZER_PIN 0
 // ===========================
 // Select camera model in board_config.h
 // ===========================
@@ -15,6 +18,7 @@
 #define RXD2 14
 #define TXD2 15
 #define GPS_BAUD 9600
+bool gpsFixNotified = false;
 
 HardwareSerial SerialGPS(1);
 TinyGPSPlus gps;
@@ -41,6 +45,20 @@ const char *password = "121269@ma#";
 WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
 
+void SetupIndicator(){
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+void buzzerBeep(int times, int delayMs) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(delayMs);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(delayMs);
+  }
+}
+
 void setupMQTT() {
   mqttClient.setServer(mqtt_broker, mqtt_port);
 }
@@ -53,6 +71,7 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     
     if (mqttClient.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
+      buzzerBeep(2, 100);
       Serial.println("Connected to MQTT Broker.");
     } else {
       Serial.print("Failed, rc=");
@@ -64,10 +83,13 @@ void reconnect() {
 }
 
 
+
 String captureAndEncodeImage();
 
 void setup() {
   Serial.begin(115200);
+
+  SetupIndicator();
   Serial.setDebugOutput(true);
   Serial.println();
   mqttClient.setBufferSize(8000);  // New edit here
@@ -84,11 +106,12 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("WiFi Beeb");
+  buzzerBeep(1, 100);
   Serial.println("");
   Serial.println("WiFi connected!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
   // Initialize secure WiFiClient
   wifiClient.setInsecure();
   setupMQTT();
@@ -183,6 +206,13 @@ void loop() {
     Latitude = gps.location.lat();
     Longitude = gps.location.lng();
 
+    if (!gpsFixNotified) {
+      Serial.println("GPS Fix Acquired!");
+      buzzerBeep(1, 400);
+      Serial.println("GPS Beeb");
+      gpsFixNotified = true;
+    } 
+
     // Time adjustment for Egypt (UTC+2)
     int hour = gps.time.hour() + 2;
     if (hour >= 24) hour -= 24;
@@ -197,6 +227,10 @@ void loop() {
             gps.date.year());
     timestamp = String(buffer);
   }else{
+    if (gpsFixNotified) {
+      Serial.println("GPS Fix Lost!");
+      gpsFixNotified = false;
+    }
     Latitude = 29;
     Longitude = 30;
     timestamp = "TEST_TIME";
