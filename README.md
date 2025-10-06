@@ -56,6 +56,10 @@ The system consists of:
 
 <img width="1738" height="428" alt="deployement diagram" src="https://github.com/user-attachments/assets/c97f4eff-2099-4917-847c-9398a9769aa4" />
 
+# Data Logging Automation with Node-RED
+
+<img width="1259" height="485" alt="image" src="https://github.com/user-attachments/assets/905b3c0c-c842-41c7-9803-cd56f3e154aa" />
+
 
 ---
 # Database Design
@@ -123,6 +127,7 @@ The system consists of:
 ---
 
 📌 *This project was developed as part of our journey at the Digitopia competition 2025.*  
+
 
 
 
