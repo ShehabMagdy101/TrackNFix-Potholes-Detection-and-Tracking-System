@@ -5,6 +5,7 @@
 #include <TinyGPS++.h>
 #include <HardwareSerial.h>
 #include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 
 // =============================
 // indicator: Buzzer
@@ -15,8 +16,8 @@
 #include "board_config.h"
 
 // ---- GPS -----
-#define RXD2 14
-#define TXD2 15
+#define RXD2 13
+#define TXD2 12
 #define GPS_BAUD 9600
 bool gpsFixNotified = false;
 
@@ -44,6 +45,11 @@ const char *password = "121269@ma#";
 
 WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
+
+// Timing variables
+unsigned long lastPublishTime = 0;
+const unsigned long publishInterval = 10000; // 10 seconds
+unsigned long lastGPSCheck = 0;
 
 void SetupIndicator(){
   pinMode(BUZZER_PIN, OUTPUT);
@@ -82,8 +88,6 @@ void reconnect() {
   }
 }
 
-
-
 String captureAndEncodeImage();
 
 void setup() {
@@ -92,7 +96,7 @@ void setup() {
   SetupIndicator();
   Serial.setDebugOutput(true);
   Serial.println();
-  mqttClient.setBufferSize(8000);  // New edit here
+  mqttClient.setBufferSize(16000);  // Increased buffer size
 
   Serial.println("\nGPS Searching Started");
   SerialGPS.begin(GPS_BAUD, SERIAL_8N1, RXD2, TXD2);
@@ -106,12 +110,12 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("WiFi Beeb");
   buzzerBeep(1, 100);
   Serial.println("");
   Serial.println("WiFi connected!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
   // Initialize secure WiFiClient
   wifiClient.setInsecure();
   setupMQTT();
@@ -136,17 +140,17 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_QVGA;  // edit image size
+  config.frame_size = FRAMESIZE_QVGA;  // Smaller image for better transmission
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 15;
+  config.jpeg_quality = 20;
   config.fb_count = 1;
 
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
-      config.jpeg_quality = 10;
+      config.jpeg_quality = 15;
       config.fb_count = 2;
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
@@ -186,58 +190,89 @@ void setup() {
 #endif
 
   Serial.println("Camera initialized successfully!");
-  
-  // Give camera time to adjust
   delay(2000);
 }
 
 
 void loop() {
+  // CRITICAL: Read GPS data continuously
+  while (SerialGPS.available() > 0) {
+    char c = SerialGPS.read();
+    gps.encode(c);
+  }
+
   if (!mqttClient.connected()) {
     reconnect();
   }
   mqttClient.loop();
 
-  double Latitude, Longitude;
-  String timestamp;
-
-
-  if (gps.location.isValid() && gps.date.isValid() && gps.time.isValid()) {
-    Latitude = gps.location.lat();
-    Longitude = gps.location.lng();
-
-    if (!gpsFixNotified) {
-      Serial.println("GPS Fix Acquired!");
-      buzzerBeep(1, 400);
-      Serial.println("GPS Beeb");
-      gpsFixNotified = true;
-    } 
-
-    // Time adjustment for Egypt (UTC+2)
-    int hour = gps.time.hour() + 2;
-    if (hour >= 24) hour -= 24;
-
-    char buffer[25];
-    sprintf(buffer, "%02d:%02d:%02d %02d/%02d/%04d",
-            hour,
-            gps.time.minute(),
-            gps.time.second(),
-            gps.date.day(),
-            gps.date.month(),
-            gps.date.year());
-    timestamp = String(buffer);
-  }else{
-    if (gpsFixNotified) {
-      Serial.println("GPS Fix Lost!");
-      gpsFixNotified = false;
-    }
-    Latitude = 29;
-    Longitude = 30;
-    timestamp = "TEST_TIME";
-  }
-    // Serial.println("Capturing and encoding image...");
+  // GPS status check every 5 seconds
+  if (millis() - lastGPSCheck > 5000) {
+    lastGPSCheck = millis();
     
+    if (gps.location.isValid()) {
+      buzzerBeep(2, 50); // GPS has fix
+      Serial.printf("GPS: Lat=%.6f, Lon=%.6f, Sats=%d\n", 
+                    gps.location.lat(), gps.location.lng(), gps.satellites.value());
+    } else {
+      buzzerBeep(1, 50); // Still searching
+      Serial.printf("GPS searching... Chars=%lu, Sentences=%lu\n", 
+                    gps.charsProcessed(), gps.sentencesWithFix());
+    }
+  }
+
+  // Publish data every 10 seconds (SEPARATE from GPS check!)
+  if (millis() - lastPublishTime >= publishInterval) {
+    lastPublishTime = millis();
+
+    double Latitude, Longitude;
+    String timestamp;
+
+    if (gps.location.isValid() && gps.date.isValid() && gps.time.isValid()) {
+      Latitude = gps.location.lat();
+      Longitude = gps.location.lng();
+
+      if (!gpsFixNotified) {
+        Serial.println("*** GPS FIX ACQUIRED! ***");
+        buzzerBeep(3, 200); // 3 long beeps = GPS fix acquired!
+        gpsFixNotified = true;
+      }
+
+      // Time adjustment for Egypt (UTC+2)
+      int hour = gps.time.hour() + 3;  // زودت واحد عشان التوقيت الصيفي
+      if (hour >= 24) hour -= 24;
+
+      char buffer[25];
+      sprintf(buffer, "%02d:%02d:%02d %02d/%02d/%04d",
+              hour,
+              gps.time.minute(),
+              gps.time.second(),
+              gps.date.day(),
+              gps.date.month(),
+              gps.date.year());
+      timestamp = String(buffer);
+      
+      Serial.printf("Using REAL GPS data: %.6f, %.6f, %s\n", Latitude, Longitude, timestamp.c_str());
+    } else {
+      if (gpsFixNotified) {
+        Serial.println("GPS Fix Lost!");
+        buzzerBeep(4, 100);
+        gpsFixNotified = false;
+      }
+      Latitude = 29;
+      Longitude = 30;
+      timestamp = "TEST_TIME";
+      Serial.println("Using TEST data (no GPS fix)");
+    }
+
+    Serial.println("Capturing image...");
     String Image_encoded = captureAndEncodeImage();
+
+    if (Image_encoded.length() == 0) {
+      Serial.println("ERROR: Camera capture failed!");
+      buzzerBeep(5, 100); // 5 beeps = camera error
+      return;
+    }
 
     // build JSON message
     id++;
@@ -250,44 +285,40 @@ void loop() {
     msg += "\"image\":\"" + Image_encoded + "\"";
     msg += "}";
 
-    Serial.println("Publishing message size: " + String(msg.length()) + " bytes");
-    mqttClient.publish(topic_publish, msg.c_str());
+    Serial.print("Publishing message... Size: ");
+    Serial.print(msg.length());
+    Serial.println(" bytes");
     
-    // Wait 10 seconds before next capture
-    delay(10000);
+    bool published = mqttClient.publish(topic_publish, msg.c_str());
+    
+    if (published) {
+      Serial.println("✓ Message published successfully!");
+      digitalWrite(BUZZER_PIN, HIGH);
+      delay(100);
+        digitalWrite(BUZZER_PIN, LOW);
+    } else {
+      Serial.println("✗ FAILED to publish message!");
+      buzzerBeep(6, 100); // 6 quick beeps = publish failed
+      
+      // Try to reconnect
+      if (!mqttClient.connected()) {
+        Serial.println("MQTT disconnected, reconnecting...");
+        reconnect();
+      }
+    }
+  }
+  // Small delay to prevent watchdog reset
+  delay(10);
 }
 
 String captureAndEncodeImage() {
-  // Capture image
   camera_fb_t *fb = esp_camera_fb_get();
-  
   if (!fb) {
     Serial.println("Camera capture failed!");
     return "";
   }
-  
-  // Serial.println("Image captured successfully!");
-  // Serial.printf("Image size: %d bytes\n", fb->len);
-  // Serial.printf("Image width: %d\n", fb->width);
-  // Serial.printf("Image height: %d\n", fb->height);
-  // Serial.printf("Image format: %s\n", fb->format == PIXFORMAT_JPEG ? "JPEG" : "Other");
-  
-  // Encode to Base64
+  Serial.printf("Image captured: %d bytes\n", fb->len);
   String base64Image = base64::encode(fb->buf, fb->len);
-  
-  // Serial.println("\n--- Base64 Encoding Results ---");
-  // Serial.printf("Original image size: %d bytes\n", fb->len);
-  // Serial.printf("Base64 encoded size: %d characters\n", base64Image.length());
-  // Serial.printf("Size increase: %.2f%%\n", ((float)(base64Image.length() - fb->len) / fb->len) * 100);
-  
-  // // Print first 100 characters of Base64 string as sample
-  // Serial.println("\nFirst 100 characters of Base64:");
-  // Serial.println(base64Image.substring(0, 100));
-  // Serial.println("...");
-  
-  
-  // Return the frame buffer back to the driver
-  esp_camera_fb_return(fb);
-  
+  esp_camera_fb_return(fb); 
   return base64Image;
 }
