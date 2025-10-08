@@ -108,7 +108,6 @@ The system consists of:
 - Enhance ML model accuracy with larger datasets.  
 - Develop a **mobile app** for easier community reporting.  
 - Implement **real-time notifications** for nearby potholes.  
-- Explore **distributed data storage** for large-scale deployments.  
 - Add **donation & reward system** to fund and encourage road repairs.  
 
 
@@ -127,6 +126,7 @@ The system consists of:
 ---
 
 📌 *This project was developed as part of our journey at the Digitopia competition 2025.*  
+
 
 
 
