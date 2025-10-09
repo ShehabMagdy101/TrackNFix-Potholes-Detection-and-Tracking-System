@@ -96,6 +96,9 @@ The system consists of:
 
 <img width="436" height="489" alt="image" src="https://github.com/user-attachments/assets/e5bff27e-9585-4338-9ee9-f208b59e4594" />
 
+# Circuit Diagram
+
+<img width="948" height="517" alt="image" src="https://github.com/user-attachments/assets/580a0742-51c9-49ae-966a-314bd3d13fa8" />
 
 # 💻 Web App Dashboard  
 
@@ -126,6 +129,7 @@ The system consists of:
 ---
 
 📌 *This project was developed as part of our journey at the Digitopia competition 2025.*  
+
 
 
 
